@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - /root/task/data/pgdata:/var/lib/postgresql/data
+      - /root/task/init_database.sql:/docker-entrypoint-initdb.d/init_database.sql
+    environment:
+      - POSTGRES_DB=tradingdb
+      - POSTGRES_USER=traderadmin
+      - POSTGRES_PASSWORD=tradepass2024
+    networks:
+      - trading-net
+  fastapi:
+    build: /root/task
+    container_name: trading-fastapi
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - /root/task:/root/task
+    working_dir: /root/task
+    entrypoint: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - trading-net
+networks:
+  trading-net:
+    driver: bridge
+volumes:
+  pgdata:
